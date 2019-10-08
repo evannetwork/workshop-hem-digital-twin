@@ -110,30 +110,38 @@ module.exports = class SmartAgentWorkshopHemInitializer extends Initializer {
 
         const digitalTwin = this._getDigitalTwin()
         const container = (await digitalTwin.getEntry('metadata')).value
-        const containerAddress = await container.getContractAddress()
 
-        api.eth.blockEmitter.on('data', async (block) => {
-          for (let transaction of block.transactions) {
-            if (containerAddress === transaction.to) {
-              const input = abiDecoder.decodeMethod(transaction.input)
-              if (input &&
-                  input.params[0].value[0] === this.runtime.nameResolver.soliditySha3('usagelog')) {
-                api.log('received an update to "usagelog"')
-                // get entries from list 'usagelog', fetch 2 items, skip no items, last items first
-                const entries = await container.getListEntries('usagelog', 2, 0, true)
-                if (entries.length === 2 &&
-                    entries[0].state === 'stopped' &&
-                    entries[1].state === 'started') {
-                  let workingtime = await container.getEntry('workingtime')
-                  workingtime += entries[0].timestamp - entries[1].timestamp
-                  await container.setEntry('workingtime', workingtime)
-                } else {
-                  api.log('received "usagelog" update, but last entries were invalid')
+        //Condition to not exit npm rather wait for value update
+        if (container === '0x0000000000000000000000000000000000000000' ){
+          api.log("container has value " + container )
+
+        }else{
+
+          const containerAddress = await container.getContractAddress()
+
+          api.eth.blockEmitter.on('data', async (block) => {
+            for (let transaction of block.transactions) {
+              if (containerAddress === transaction.to) {
+                const input = abiDecoder.decodeMethod(transaction.input)
+                if (input &&
+                    input.params[0].value[0] === this.runtime.nameResolver.soliditySha3('usagelog')) {
+                  api.log('received an update to "usagelog"')
+                  // get entries from list 'usagelog', fetch 2 items, skip no items, last items first
+                  const entries = await container.getListEntries('usagelog', 2, 0, true)
+                  if (entries.length === 2 &&
+                      entries[0].state === 'stopped' &&
+                      entries[1].state === 'started') {
+                    let workingtime = await container.getEntry('workingtime')
+                    workingtime += entries[0].timestamp - entries[1].timestamp
+                    await container.setEntry('workingtime', workingtime)
+                  } else {
+                    api.log('received "usagelog" update, but last entries were invalid')
+                  }
                 }
               }
             }
-          }
-        })
+          })
+        }
       }
     }
 
