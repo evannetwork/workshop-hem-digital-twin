@@ -113,10 +113,8 @@ module.exports = class SmartAgentWorkshopHemInitializer extends Initializer {
 
         //Condition to not exit npm rather wait for value update
         if (container === '0x0000000000000000000000000000000000000000' ){
-          api.log("container has value " + container )
-
-        }else{
-
+          api.log('container metadata not set, skip listening. Run update first')
+        } else {
           const containerAddress = await container.getContractAddress()
 
           api.eth.blockEmitter.on('data', async (block) => {
