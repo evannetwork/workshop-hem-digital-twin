@@ -1,9 +1,0 @@
-bundles/*
-discify/*
-dist/*
-node_modules/*
-.env.local
-ipfs-contractus
-package-lock.json.*
-package-lock.json
-docs/_build/*
